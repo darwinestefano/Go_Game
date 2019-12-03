@@ -24,8 +24,14 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-        self.boardArray =[]         # TODO - create a 2d int/Piece array to store the state of the game
-        # self.printBoardArray()    # TODO - uncomment this method after create the array above
+        w, h = 8, 8;
+        self.boardArray = [[0 for x in range(w)] for y in range(h)]
+        #self.boardArray =[]        # TODO - create a 2d int/Piece array to store the state of the game
+        #for row in self.boardArray:
+            #for col in row:
+
+
+        self.printBoardArray()    # TODO - uncomment this method after create the array above
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -57,7 +63,7 @@ class Board(QFrame):  # base the board on a QFrame widget
             if Board.counter == 0:
                 print("Game over")
             self.counter -= 1
-            print('timerEvent()', self.counter)
+            #print('timerEvent()', self.counter)
             self.updateTimerSignal.emit(self.counter)
         else:
             super(Board, self).timerEvent(event)      # if we do not handle an event we should pass it to the super
@@ -65,7 +71,6 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
-        #self.image = QImage(200, 200, QImage.Format_RGB32)
         painter = QPainter(self)
         self.drawBoardSquares(painter)
         self.drawPieces(painter)
@@ -111,11 +116,14 @@ class Board(QFrame):  # base the board on a QFrame widget
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 painter.save()
-                painter.translate()
-
+                painter.translate(70* col, 70* row)
                 # TODO draw some the pieces as ellipses
                 # TODO choose your colour and set the painter brush to the correct colour
-                radius = (self.squareWidth() - 2) / 2
-                center = QPoint(radius, radius)
+                painter.setPen(QPen(Qt.black, 1, Qt.SolidLine))         #inclui essa linha
+                painter.setBrush(QBrush(Qt.black, Qt.SolidPattern))     #inclui essa linha
+
+                #radius = (self.squareWidth() - 2) / 2
+                radius = (self.squareWidth() - 15) / 2
+                center = QPoint(80 + radius, 80 + radius)
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
