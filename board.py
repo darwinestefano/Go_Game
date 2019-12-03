@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QPoint
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import *
 from piece import Piece
 
 class Board(QFrame):  # base the board on a QFrame widget
@@ -8,10 +8,11 @@ class Board(QFrame):  # base the board on a QFrame widget
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
 
     # TODO set the board width and height to be square
-    boardWidth  = 0     # board is 0 squares wide # TODO this needs updating
-    boardHeight = 0     #
+    boardWidth  = 7     # board is 0 squares wide # TODO this needs updating
+    boardHeight = 7     #
     timerSpeed  = 1     # the timer updates ever 1 second
     counter     = 10    # the number the counter will count down from
+
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -64,9 +65,10 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
-        # painter = QPainter(self)
-        # self.drawBoardSquares(painter)
-        # self.drawPieces(painter)
+        #self.image = QImage(200, 200, QImage.Format_RGB32)
+        painter = QPainter(self)
+        self.drawBoardSquares(painter)
+        self.drawPieces(painter)
 
     def mousePressEvent(self, event):
         '''this event is automatically called when the mouse is pressed'''
@@ -85,15 +87,23 @@ class Board(QFrame):  # base the board on a QFrame widget
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
         # TODO set the default colour of the brush
+        #painter.begin(self)
+        painter.setPen(QPen(Qt.black, 2, Qt.SolidLine))
         for row in range(0, Board.boardHeight):
             for col in range (0, Board.boardWidth):
                 painter.save()
                 colTransformation = self.squareWidth()* col # TODO set this value equal the transformation in the column direction
-                rowTransformation = 0                       # TODO set this value equal the transformation in the row direction
-                painter.translate(colTransformation,rowTransformation)
-                painter.fillRect()                          # TODO provide the required arguments
+                rowTransformation = self.squareHeight()* row # TODO set this value equal the transformation in the row direction
+                # first value is offset (so board wont be sticky to the edges)
+                painter.drawRect(105 + (70 * row), 105 + (70 * col), 70, 70)
+                #painter.drawRect(30 + (self.squareWidth() * row), 30 + (self.squareHeight() * col), self.squareWidth(), self.squareHeight())
+                #print("SQAUREEEEEEEEEEEEEEEEEEEEEEEE")
+                #print(self.squareWidth()) #67
+                #print(self.squareHeight()) #98 NAO ESQUECER DE APAGAR!!!!!!!!!!!
+                painter.translate(colTransformation, rowTransformation)
                 painter.restore()
                 # TODO change the colour of the brush so that a checkered board is drawn
+                painter.setPen(QPen(Qt.black, 2, Qt.SolidLine))
 
     def drawPieces(self, painter):
         '''draw the prices on the board'''
