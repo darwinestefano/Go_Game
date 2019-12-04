@@ -27,7 +27,8 @@ class Go(QMainWindow):
         self.setFixedSize(700, 700)
         self.center()
         self.setWindowTitle('Go')
-        self.setStyleSheet("background-image:  url(images/wood.jpg); margin: 90px 90px")
+
+        self.setStyleSheet("background-image:  url(images/wood.jpg); margin: 60px 75px")
 
         self.show()
 

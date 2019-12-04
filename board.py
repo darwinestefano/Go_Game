@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QPoint
 from PyQt5.QtGui import *
 from piece import Piece
+from game_logic import GameLogic
 
 class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
@@ -16,6 +17,7 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def __init__(self, parent):
         super().__init__(parent)
+        print("GAME LOGIC: ", GameLogic.turn)
         self.initBoard()
 
     def initBoard(self):
@@ -24,12 +26,14 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-        w, h = 8, 8;
-        self.boardArray = [[0 for x in range(w)] for y in range(h)]
-        #self.boardArray =[]        # TODO - create a 2d int/Piece array to store the state of the game
-        #for row in self.boardArray:
-            #for col in row:
 
+        #r, c = 8, 8
+        #self.boardArray = [[0 for x in range(r)] for y in range(c)]
+        self.boardArray =[]        # TODO - create a 2d int/Piece array to store the state of the game
+        for x in range(0, 8):
+            self.boardArray.append([])
+            for y in range(0, 8):
+                self.boardArray[x].append(Piece.NoPiece)
 
         self.printBoardArray()    # TODO - uncomment this method after create the array above
 
@@ -40,6 +44,67 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def mousePosToColRow(self, event):
         '''convert the mouse click event to a row and column'''
+        row = 0
+        col = 0
+        # get the row
+        if event.y() >= 70 and event.y() < 140:
+            row = 0
+            print("ROW 1")
+        elif event.y() >= 140 and event.y() < 210:
+            row = 1
+            print("ROW 2")
+        elif event.y() >= 210 and event.y() < 280:
+            row = 2
+            print("ROW 3")
+        elif event.y() >= 280 and event.y() < 350:
+            row = 3
+            print("ROW 4")
+        elif event.y() >= 350 and event.y() < 420:
+            row = 4
+            print("ROW 5")
+        elif event.y() >= 420 and event.y() < 490:
+            row = 5
+            print("ROW 6")
+        elif event.y() >= 490 and event.y() < 560:
+            row = 6
+            print("ROW 7")
+        elif event.y() >= 560 and event.y() <= 665:
+            row = 7
+            print("ROW 8")
+        # get the column
+        if event.x() >= 70 and event.x() < 140:
+            col = 0
+            print("COLUMN 1")
+        elif event.x() >= 140 and event.x() < 210:
+            col = 1
+            print("COLUMN 2")
+        elif event.x() >= 210 and event.x() < 280:
+            col = 2
+            print("COLUMN 3")
+        elif event.x() >= 280 and event.x() < 350:
+            col = 3
+            print("COLUMN 4")
+        elif event.x() >= 350 and event.x() < 420:
+            col = 4
+            print("COLUMN 5")
+        elif event.x() >= 420 and event.x() < 490:
+            col = 5
+            print("COLUMN 6")
+        elif event.x() >= 490 and event.x() < 560:
+            col = 6
+            print("COLUMN 7")
+        elif event.x() >= 560 and event.x() <= 665:
+            col = 7
+            print("COLUMN 8")
+
+        # Check who turn it is and store the white or black piece in the array
+        if GameLogic.turn == 1 and self.boardArray[row][col] == 0:
+            self.boardArray[row][col] = Piece.White
+            GameLogic.turn = 2
+        elif GameLogic.turn ==2 and self.boardArray[row][col] == 0:
+            self.boardArray[row][col] = Piece.Black
+            GameLogic.turn = 1
+        print(self.boardArray[row][col])
 
     def squareWidth(self):
         '''returns the width of one square in the board'''
@@ -80,6 +145,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         clickLoc = "click location ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
         print("mousePressEvent() - "+clickLoc)
         # TODO you could call some game logic here
+        self.mousePosToColRow(event)                    # adicionei
         self.clickLocationSignal.emit(clickLoc)
 
     def resetGame(self):
@@ -119,11 +185,19 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.translate(70* col, 70* row)
                 # TODO draw some the pieces as ellipses
                 # TODO choose your colour and set the painter brush to the correct colour
-                painter.setPen(QPen(Qt.black, 1, Qt.SolidLine))         #inclui essa linha
-                painter.setBrush(QBrush(Qt.black, Qt.SolidPattern))     #inclui essa linha
+                if self.boardArray[row][col] == 1:
+                    colour = Qt.white
+                elif self.boardArray[row][col] == 2:
+                    colour = Qt.black
+                else:
+                    colour = Qt.transparent
+
+                painter.setPen(QPen(colour, 1, Qt.SolidLine))         #inclui essa linha
+                painter.setBrush(QBrush(colour, Qt.SolidPattern))     #inclui essa linha
 
                 #radius = (self.squareWidth() - 2) / 2
                 radius = (self.squareWidth() - 15) / 2
                 center = QPoint(80 + radius, 80 + radius)
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
+                self.update()
