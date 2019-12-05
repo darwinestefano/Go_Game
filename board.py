@@ -215,8 +215,12 @@ class Board(QFrame):  # base the board on a QFrame widget
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 if row != 0 and col != 0 and row != 7 and col != 7:
+                    topLiberty = self.boardArray[row-1][col]
+                    rightLiberty = self.boardArray[row][col+1]
+                    bottomLiberty = self.boardArray[row+1][col]
+                    leftLiberty = self.boardArray[row][col-1]
                     # Check if a single Piece is surrounded by their immediate 4 liberties
-                    if self.boardArray[row-1][col] != 0 and self.boardArray[row-1][col] == self.boardArray[row][col+1] and self.boardArray[row][col+1] == self.boardArray[row+1][col] and self.boardArray[row+1][col] == self.boardArray[row][col-1]:
+                    if topLiberty != 0 and topLiberty == rightLiberty and rightLiberty == bottomLiberty and bottomLiberty == leftLiberty:
                         if self.boardArray[row][col] == 2:
                             print("Comeu peca BLACK ")
                             self.boardArray[row][col] = Piece.NoPiece
@@ -225,5 +229,5 @@ class Board(QFrame):  # base the board on a QFrame widget
                             self.boardArray[row][col] = Piece.NoPiece
                      # Check if a group is surrounded by the opponent
                     # check if right liberty is free
-                    elif self.boardArray[row-1][col] == self.boardArray[row][col-1] and self.boardArray[row][col-1] == self.boardArray[row+1][col] and self.boardArray[row][col+1] != self.boardArray[row-1][col] and self.boardArray[row][col+1] != 0:
+                    elif topLiberty == leftLiberty and leftLiberty == bottomLiberty and rightLiberty != topLiberty and rightLiberty != 0:
                         print("Check Next Piece")
