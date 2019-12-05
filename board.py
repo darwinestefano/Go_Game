@@ -17,7 +17,7 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def __init__(self, parent):
         super().__init__(parent)
-        print("GAME LOGIC: ", GameLogic.turn)
+        print("TURN: ", GameLogic.turn)
         self.initBoard()
 
     def initBoard(self):
@@ -36,6 +36,8 @@ class Board(QFrame):  # base the board on a QFrame widget
                 self.boardArray[x].append(Piece.NoPiece)
 
         self.printBoardArray()    # TODO - uncomment this method after create the array above
+
+        self.liberties = []         # array to store location of liberties of one piece
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -98,6 +100,7 @@ class Board(QFrame):  # base the board on a QFrame widget
             print("COLUMN 8")
 
         # Check who turn it is and store the white or black piece in the array
+        # Only if the space is available (Piece.NoPiece)
         if GameLogic.turn == 1 and self.boardArray[row][col] == 0:
             self.boardArray[row][col] = Piece.White
             GameLogic.turn = 2
@@ -105,6 +108,10 @@ class Board(QFrame):  # base the board on a QFrame widget
             self.boardArray[row][col] = Piece.Black
             GameLogic.turn = 1
         print(self.boardArray[row][col])
+        #self.liberties = GameLogic.getLiberties(self, row, col)     # generates the liberties of this piece
+        #print(self.liberties)
+        #GameLogic.hasLiberty(self, self.liberties, self.boardArray)
+        self.checkBoard()
 
     def squareWidth(self):
         '''returns the width of one square in the board'''
@@ -201,3 +208,19 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
                 self.update()
+
+    # Method that checks the state of the board in each turn
+    def checkBoard(self):
+        print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.boardArray]))
+        for row in range(0, len(self.boardArray)):
+            for col in range(0, len(self.boardArray[0])):
+                if row != 0 and col != 0 and row != 7 and col != 7:
+                    # Check if a single Piece is surrounded by their immediate 4 liberties
+                    if  self.boardArray[row-1][col] != 0 and self.boardArray[row-1][col] == self.boardArray[row][col+1] and self.boardArray[row][col+1] == self.boardArray[row+1][col] and self.boardArray[row+1][col] == self.boardArray[row][col-1]:
+                        if self.boardArray[row][col] == 2:
+                            print("Comeu peca BLACK ")
+                            self.boardArray[row][col] = Piece.NoPiece
+                        elif self.boardArray[row][col] == 1:
+                            print("Comeu peca WHITE ")
+                            self.boardArray[row][col] = Piece.NoPiece
+                     # Check if a group is surrounded by the opponent
