@@ -12,23 +12,23 @@ class Go(QMainWindow):
     def getBoard(self):
         return self.board
 
-    #def getScoreBoard(self):
-        #return self.scoreBoard
+    def getScoreBoard(self):
+        return self.scoreBoard
 
     def initUI(self):
         '''initiates application UI'''
         self.board = Board(self)
         self.setCentralWidget(self.board)
-        #self.scoreBoard = ScoreBoard()
-        #self.addDockWidget(Qt.RightDockWidgetArea, self.scoreBoard)
-        #self.scoreBoard.make_connection(self.board)
+        self.scoreBoard = ScoreBoard()
+        self.addDockWidget(Qt.RightDockWidgetArea, self.scoreBoard)
+        self.scoreBoard.make_connection(self.board)
 
-        #self.resize(800, 800)
+        self.resize(800, 800)
         self.setFixedSize(700, 700)
         self.center()
         self.setWindowTitle('Go')
 
-        self.setStyleSheet("background-image:  url(images/wood.jpg); margin: 60px 75px")
+        self.board.setStyleSheet("background-image:  url(images/wood.jpg); margin: 60px 75px")
 
         self.show()
 
