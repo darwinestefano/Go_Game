@@ -9,15 +9,16 @@ class Board(QFrame):  # base the board on a QFrame widget
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
 
     # TODO set the board width and height to be square
-    boardWidth  = 7     # board is 0 squares wide # TODO this needs updating
+    boardWidth  = 7     # board is 7 squares wide
     boardHeight = 7     #
     timerSpeed  = 1     # the timer updates ever 1 second
     counter     = 10    # the number the counter will count down from
 
-
     def __init__(self, parent):
         super().__init__(parent)
-        print("TURN: ", GameLogic.turn)
+        self.turn = 2               # black piece starts (1: white, 2: black)
+        print("===== BLACK goes first =====")
+        self.opponentGroup = []     # array to store locations of the opponent's
         self.initBoard()
 
     def initBoard(self):
@@ -26,92 +27,61 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-
-        #r, c = 8, 8
-        #self.boardArray = [[0 for x in range(r)] for y in range(c)]
-        self.boardArray =[]        # TODO - create a 2d int/Piece array to store the state of the game
-        for x in range(0, 8):
+        self.boardArray =[]        # 2d int/Piece array to store the state of the game
+        # Initially the board will be empty (no pieces)
+        for x in range(0, 8):       # initializing the 7 rows (board is 7x7)
             self.boardArray.append([])
-            for y in range(0, 8):
+            for y in range(0, 8):   # initializing the 7 columns (board is 7x7)
                 self.boardArray[x].append(Piece.NoPiece)
 
-        self.printBoardArray()    # TODO - uncomment this method after create the array above
-
-        self.liberties = []         # array to store location of liberties of one piece
+        self.printBoardArray()
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
         print("boardArray:")
         print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.boardArray]))
 
-    def mousePosToColRow(self, event):
-        '''convert the mouse click event to a row and column'''
+    def mousePosToColRow(self, x, y):
+        '''convert the mouse click event to a row and column
+        to find the position of the piece '''
         row = 0
         col = 0
         # get the row
-        if event.y() >= 70 and event.y() < 140:
+        if y >= 70 and y < 140:
             row = 0
-            print("ROW 1")
-        elif event.y() >= 140 and event.y() < 210:
+        elif y >= 140 and y < 210:
             row = 1
-            print("ROW 2")
-        elif event.y() >= 210 and event.y() < 280:
+        elif y >= 210 and y < 280:
             row = 2
-            print("ROW 3")
-        elif event.y() >= 280 and event.y() < 350:
+        elif y >= 280 and y < 350:
             row = 3
-            print("ROW 4")
-        elif event.y() >= 350 and event.y() < 420:
+        elif y >= 350 and y < 420:
             row = 4
-            print("ROW 5")
-        elif event.y() >= 420 and event.y() < 490:
+        elif y >= 420 and y < 490:
             row = 5
-            print("ROW 6")
-        elif event.y() >= 490 and event.y() < 560:
+        elif y >= 490 and y < 560:
             row = 6
-            print("ROW 7")
-        elif event.y() >= 560 and event.y() <= 665:
+        elif y >= 560 and y <= 665:
             row = 7
-            print("ROW 8")
         # get the column
-        if event.x() >= 70 and event.x() < 140:
+        if x >= 70 and x < 140:
             col = 0
-            print("COLUMN 1")
-        elif event.x() >= 140 and event.x() < 210:
+        elif x >= 140 and x < 210:
             col = 1
-            print("COLUMN 2")
-        elif event.x() >= 210 and event.x() < 280:
+        elif x >= 210 and x < 280:
             col = 2
-            print("COLUMN 3")
-        elif event.x() >= 280 and event.x() < 350:
+        elif x >= 280 and x < 350:
             col = 3
-            print("COLUMN 4")
-        elif event.x() >= 350 and event.x() < 420:
+        elif x >= 350 and x < 420:
             col = 4
-            print("COLUMN 5")
-        elif event.x() >= 420 and event.x() < 490:
+        elif x >= 420 and x < 490:
             col = 5
-            print("COLUMN 6")
-        elif event.x() >= 490 and event.x() < 560:
+        elif x >= 490 and x < 560:
             col = 6
-            print("COLUMN 7")
-        elif event.x() >= 560 and event.x() <= 665:
+        elif x >= 560 and x <= 665:
             col = 7
-            print("COLUMN 8")
 
-        # Check who turn it is and store the white or black piece in the array
-        # Only if the space is available (Piece.NoPiece)
-        if GameLogic.turn == 1 and self.boardArray[row][col] == 0:
-            self.boardArray[row][col] = Piece.White
-            GameLogic.turn = 2
-        elif GameLogic.turn ==2 and self.boardArray[row][col] == 0:
-            self.boardArray[row][col] = Piece.Black
-            GameLogic.turn = 1
-        print(self.boardArray[row][col])
-        #self.liberties = GameLogic.getLiberties(self, row, col)     # generates the liberties of this piece
-        #print(self.liberties)
-        #GameLogic.hasLiberty(self, self.liberties, self.boardArray)
-        self.checkBoard()
+        return row, col
 
     def squareWidth(self):
         '''returns the width of one square in the board'''
@@ -151,9 +121,9 @@ class Board(QFrame):  # base the board on a QFrame widget
         '''this event is automatically called when the mouse is pressed'''
         clickLoc = "click location ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
         print("mousePressEvent() - "+clickLoc)
-        # TODO you could call some game logic here
-        self.mousePosToColRow(event)                    # adicionei
-        self.clickLocationSignal.emit(clickLoc)
+        #self.clickLocationSignal.emit(clickLoc)                                # todo DELETE THIS LINE????????? INVESTIGATE!
+
+        self.tryMove(event.x(), event.y())
 
     def resetGame(self):
         '''clears pieces from the board'''
@@ -161,37 +131,84 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def tryMove(self, newX, newY):
         '''tries to move a piece'''
+        # Get the position of the click to place the piece on the board
+        row, col = self.mousePosToColRow(newX, newY)
+
+        # list of liberties' positions (row, col) of the piece just placed on the board
+        # (top, bottom, left, right)
+        libertiesPos = GameLogic.get_liberties_positions(self, row, col)
+        # list of the pieces placed on the liberties (0: no piece, 1: white, 2: black)
+        libertiesPieces = GameLogic.get_liberties_pieces(self, self.boardArray, libertiesPos)
+
+        # Check if is possible to place a Piece on the board (true: it's possible, false otherwise)
+        placePiece = GameLogic.place_piece_on_board(GameLogic, libertiesPieces, self.turn)
+
+        # piece can be placed/moved
+        if placePiece:
+            '''Check who turn it is and store the white or black piece in the array
+            Only if the space is available (Piece.NoPiece)
+            Give the turn for the opponent piece.'''
+            if self.turn == 1 and self.boardArray[row][col] == 0:
+                self.boardArray[row][col] = Piece.White
+                self.turn = GameLogic.getTurn(GameLogic, 2)
+            elif self.turn == 2 and self.boardArray[row][col] == 0:
+                self.boardArray[row][col] = Piece.Black
+                self.turn = GameLogic.getTurn(GameLogic, 1)
+
+            # print the board array to vizualize the placed piece (state of the board)
+            self.printBoardArray()
+
+            '''liberties of the placed piece will be checked in each click in order to
+            check if it will gain the opponent's territories '''
+            # get a list of the group of opponent's positions (2D array to store multiple separate groups)
+            self.opponentGroup = GameLogic.get_opponent_group(GameLogic, libertiesPos, row, col, self.boardArray)
+            self.check_opponent_is_surrounded()     # check if opponent is surrounded without free liberties
+
+    def check_opponent_is_surrounded(self):
+        ''' Checks if opponent is surrounded without free liberties
+        Each row in the 2D array self.opponentGroup corresponds to a group found at
+        the top, bottom, left and right of the placed piece'''
+        isSurrounded = False
+        for i in range(0, 4):
+            if not self.opponentGroup[i][0]:    # if no group was found, do nothing
+                continue
+            else:
+                # check if the group is surrounded by its opponent
+                isSurrounded = GameLogic.isSurrounded(GameLogic, self.opponentGroup[i], self.boardArray)
+                ''' if the opponent group is surrounded, each piece in this group will be
+                 set to Piece.NoPiece (empty) and points will be added for each piece. '''
+                if isSurrounded:
+                    for j in range(0, len(self.opponentGroup[i])):
+                        for piece in self.opponentGroup[i][j]:
+                            self.boardArray[piece[0]][piece[1]] = Piece.NoPiece
 
     def drawBoardSquares(self, painter):
-        '''draw all the square on the board'''
-        # TODO set the default colour of the brush
-        #painter.begin(self)
+        '''draw all the squares on the board'''
+        # Default brush is a black solid line, line weight 2
         painter.setPen(QPen(Qt.black, 2, Qt.SolidLine))
         for row in range(0, Board.boardHeight):
-            for col in range (0, Board.boardWidth):
+            for col in range(0, Board.boardWidth):
                 painter.save()
-                colTransformation = self.squareWidth()* col # TODO set this value equal the transformation in the column direction
-                rowTransformation = self.squareHeight()* row # TODO set this value equal the transformation in the row direction
-                # first value is offset (so board wont be sticky to the edges)
+                colTransformation = self.squareWidth() * col   # transformation in the column direction
+                rowTransformation = self.squareHeight() * row  # transformation in the row direction
+                # Draw the squares on the board
+                # first 2 params: x, y values on the axis
+                # (the 105 is offset, so board won't be sticky to the edges of the wooden background image)
+                # last 2 params:  fixed size 70x70 of each square
                 painter.drawRect(105 + (70 * row), 105 + (70 * col), 70, 70)
-                #painter.drawRect(30 + (self.squareWidth() * row), 30 + (self.squareHeight() * col), self.squareWidth(), self.squareHeight())
-                #print("SQAUREEEEEEEEEEEEEEEEEEEEEEEE")
-                #print(self.squareWidth()) #67
-                #print(self.squareHeight()) #98 NAO ESQUECER DE APAGAR!!!!!!!!!!!
                 painter.translate(colTransformation, rowTransformation)
                 painter.restore()
-                # TODO change the colour of the brush so that a checkered board is drawn
+                # colour of the brush (black) so that a checkered board is drawn
                 painter.setPen(QPen(Qt.black, 2, Qt.SolidLine))
 
     def drawPieces(self, painter):
-        '''draw the prices on the board'''
-        colour = Qt.transparent # empty square could be modeled with transparent pieces
+        '''draw the pieces on the board'''
+        colour = Qt.transparent  # empty square could be modeled with transparent pieces
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 painter.save()
-                painter.translate(70* col, 70* row)
-                # TODO draw some the pieces as ellipses
-                # TODO choose your colour and set the painter brush to the correct colour
+                painter.translate(70 * col, 70 * row)   # each square is 70x70
+                # set the painter brush to the correct colour (white or black for pieces, transparent for none)
                 if self.boardArray[row][col] == 1:
                     colour = Qt.white
                 elif self.boardArray[row][col] == 2:
@@ -199,35 +216,11 @@ class Board(QFrame):  # base the board on a QFrame widget
                 else:
                     colour = Qt.transparent
 
-                painter.setPen(QPen(colour, 1, Qt.SolidLine))         #inclui essa linha
-                painter.setBrush(QBrush(colour, Qt.SolidPattern))     #inclui essa linha
+                painter.setPen(QPen(colour, 1, Qt.SolidLine))         # set the pen as a black solid line, line weight 1
+                painter.setBrush(QBrush(colour, Qt.SolidPattern))     # set the brush to fill up the circle with the correct colour
 
-                #radius = (self.squareWidth() - 2) / 2
-                radius = (self.squareWidth() - 15) / 2
-                center = QPoint(80 + radius, 80 + radius)
+                radius = (self.squareWidth() - 15) / 2                # calculate the radius of the circle
+                center = QPoint(80 + radius, 80 + radius)             # calculate the centre of the circle
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
                 self.update()
-
-    # Method that checks the state of the board in each turn
-    def checkBoard(self):
-        print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.boardArray]))
-        for row in range(0, len(self.boardArray)):
-            for col in range(0, len(self.boardArray[0])):
-                if row != 0 and col != 0 and row != 7 and col != 7:
-                    topLiberty = self.boardArray[row-1][col]
-                    rightLiberty = self.boardArray[row][col+1]
-                    bottomLiberty = self.boardArray[row+1][col]
-                    leftLiberty = self.boardArray[row][col-1]
-                    # Check if a single Piece is surrounded by their immediate 4 liberties
-                    if topLiberty != 0 and topLiberty == rightLiberty and rightLiberty == bottomLiberty and bottomLiberty == leftLiberty:
-                        if self.boardArray[row][col] == 2:
-                            print("Comeu peca BLACK ")
-                            self.boardArray[row][col] = Piece.NoPiece
-                        elif self.boardArray[row][col] == 1:
-                            print("Comeu peca WHITE ")
-                            self.boardArray[row][col] = Piece.NoPiece
-                     # Check if a group is surrounded by the opponent
-                    # check if right liberty is free
-                    elif topLiberty == leftLiberty and leftLiberty == bottomLiberty and rightLiberty != topLiberty and rightLiberty != 0:
-                        print("Check Next Piece")
