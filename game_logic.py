@@ -1,9 +1,8 @@
 from piece import Piece
 
 class GameLogic:
-    
-    score_white = 0
-    score_black = 0
+
+    turn = 2
 
     def getTurn(self, pieceColour):
         ''' Turn: Game starts with Black going first
@@ -91,7 +90,7 @@ class GameLogic:
             self.countX += 1    # increment row counter so next group will be added to a different group
             self.countY = 0     # reset column counter
 
-        #print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.opponentGroup]))
+        print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.opponentGroup]))
         return self.opponentGroup
 
     def scanOpponent(self, p, row, col, boardArray):
@@ -101,19 +100,33 @@ class GameLogic:
         # get positions of the opponent's liberties
         libertiesPos = self.get_liberties_positions(self, p[0], p[1])
 
+        print("ENTRANDO NO METODO SCAN OPPONENT. ROW: ", self.countX)
+        print("CURRENT PIECE: ", p[0], p[1])
+        print("CURRENT PIECE LIBERTIES: ", libertiesPos)
+
         # loop through each liberty
         for piece in libertiesPos:
             if piece[0] == row and piece[1] == col:
+                print("Scan Opponent: SKIP", piece[0], piece[1])
                 continue              # prevents to keep scanning the same Piece over and over
             elif boardArray[piece[0]][piece[1]] == 0:    # opponent has free liberties
+                print("Scan Opponent: opponent has free liberties")
                 return
             elif boardArray[piece[0]][piece[1]] == self.turn:   # more to be added to the group
-                if self.opponentGroup.count((piece[0], piece[1])) > 0:  # check if the piece wasn't already added
+                print((piece[0], piece[1]))
+
+                if self.opponentGroup[self.countX].count([(piece[0], piece[1])]) > 0:  # check if the piece wasn't already added
+                    #todo IF WAS ALREADY ADDED KEEP XXXXXXXXXXXXXXXXXX
+                    print("Scan Opponent: piece was already added to the group")
                     return
+                print("Scan Opponent: adding", piece[0], piece[1])
                 # if it wasn't already added to the group, add it
                 self.opponentGroup[self.countX][self.countY].append((piece[0], piece[1]))
                 self.countY += 1    # increment column counter so next piece won't overwrite existing piece
                 self.scanOpponent(self, piece, p[0], p[1], boardArray)      # recursive call
+
+
+        print(self.opponentGroup[self.countX])
         return
 
     def isSurrounded(self, group, board):

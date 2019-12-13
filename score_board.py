@@ -4,6 +4,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 import time
+from board import Board
 
 from PyQt5.uic.properties import QtWidgets, QtGui
 
