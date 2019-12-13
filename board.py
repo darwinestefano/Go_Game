@@ -14,7 +14,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     timerSpeed  = 1     # the timer updates ever 1 second
     counter     = 10    # the number the counter will count down from
 
-    score_white = 0
+    score_white = 0     # Scores variables for each player
     score_black = 0
 
     turn = 2    # black piece starts (1: white, 2: black)
