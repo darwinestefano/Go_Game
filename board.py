@@ -14,9 +14,13 @@ class Board(QFrame):  # base the board on a QFrame widget
     timerSpeed  = 1     # the timer updates ever 1 second
     counter     = 10    # the number the counter will count down from
 
+    score_white = 0
+    score_black = 0
+
+    turn = 2    # black piece starts (1: white, 2: black)
+
     def __init__(self, parent):
         super().__init__(parent)
-        self.turn = 2               # black piece starts (1: white, 2: black)
         print("===== BLACK goes first =====")
         self.opponentGroup = []     # array to store locations of the opponent's
         self.initBoard()
@@ -181,6 +185,14 @@ class Board(QFrame):  # base the board on a QFrame widget
                     for j in range(0, len(self.opponentGroup[i])):
                         for piece in self.opponentGroup[i][j]:
                             self.boardArray[piece[0]][piece[1]] = Piece.NoPiece
+                            if self.turn == 1:
+                                self.score_black += 1
+                            elif self.turn == 2:
+                                self.score_white += 1
+                # todo DELETE THESE PRINTS AFTER IMPLEMENTING ON THE SCORE BOARD
+                print("White score: ", self.score_white)
+                print("Black score: ", self.score_black)
+
 
     def drawBoardSquares(self, painter):
         '''draw all the squares on the board'''
