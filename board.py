@@ -37,7 +37,6 @@ class Board(QFrame):  # base the board on a QFrame widget
             self.boardArray.append([])
             for y in range(0, 8):   # initializing the 7 columns (board is 7x7)
                 self.boardArray[x].append(Piece.NoPiece)
-
         self.printBoardArray()
 
     def printBoardArray(self):
@@ -125,7 +124,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         '''this event is automatically called when the mouse is pressed'''
         clickLoc = "click location ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
         print("mousePressEvent() - "+clickLoc)
-        #self.clickLocationSignal.emit(clickLoc)                                # todo DELETE THIS LINE????????? INVESTIGATE!
+        self.clickLocationSignal.emit(clickLoc)
 
         self.tryMove(event.x(), event.y())
 
@@ -234,5 +233,6 @@ class Board(QFrame):  # base the board on a QFrame widget
                 radius = (self.squareWidth() - 15) / 2                # calculate the radius of the circle
                 center = QPoint(80 + radius, 80 + radius)             # calculate the centre of the circle
                 painter.drawEllipse(center, radius, radius)
+
                 painter.restore()
                 self.update()
