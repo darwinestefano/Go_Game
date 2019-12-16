@@ -12,6 +12,8 @@ from PyQt5.uic.properties import QtWidgets, QtGui
 class ScoreBoard(QDockWidget):
     '''# base the score_board on a QDockWidget'''
 
+
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -36,6 +38,8 @@ class ScoreBoard(QDockWidget):
 
         self.show()
 
+        self.Board = Board
+
     def add_players(self, layout):
 
         #create two labels which will be updated by signals
@@ -53,6 +57,12 @@ class ScoreBoard(QDockWidget):
         # self.label_timeRemaining_P2 = QLabel("Time remaining: ")
         self.v_box2 = QVBoxLayout()
         self.v_box2.addWidget(self.label_clickLocation)
+
+        resetButton = QPushButton('Reset')
+        resetButton.clicked.connect(self.reset)
+        self.v_box2.addWidget(resetButton)
+
+
         self.group_box_p2.setLayout(self.v_box2)
 
         self.setStyleSheet('QGroupBox#ColoredGroupBox {font-size: 20px; '   # font size
@@ -63,6 +73,10 @@ class ScoreBoard(QDockWidget):
 
         layout.addWidget(self.group_box_p1)
         layout.addWidget(self.group_box_p2)
+
+    def reset(self):
+        print("Button reset clicked")
+        Board.resetGame(Board)
 
     def center(self):
         '''centers the window on the screen, you do not need to implement this method'''
