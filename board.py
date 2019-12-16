@@ -18,7 +18,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     score_black = 0
 
     turn = 2            # black piece starts (1: white, 2: black)
-    boardArray = []     # array to store the state of the game
+    boardArray = []     # 2d int/Piece array to store the state of the game
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -32,8 +32,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-        self.boardArray =[]        # 2d int/Piece array to store the state of the game
-        # Initially the board will be empty (no pieces)
+        # Populating boardArray: Initially the board will be empty (no pieces)
         for x in range(0, 8):       # initializing the 7 rows (board is 7x7)
             self.boardArray.append([])
             for y in range(0, 8):   # initializing the 7 columns (board is 7x7)
