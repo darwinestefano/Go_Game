@@ -17,7 +17,8 @@ class Board(QFrame):  # base the board on a QFrame widget
     score_white = 0     # Scores variables for each player
     score_black = 0
 
-    turn = 2    # black piece starts (1: white, 2: black)
+    turn = 2            # black piece starts (1: white, 2: black)
+    boardArray = []     # array to store the state of the game
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -124,13 +125,20 @@ class Board(QFrame):  # base the board on a QFrame widget
         '''this event is automatically called when the mouse is pressed'''
         clickLoc = "click location ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
         print("mousePressEvent() - "+clickLoc)
-        self.clickLocationSignal.emit(clickLoc)
+        self.tryMove(event.x(), event.y())          # sends the location of the click to try to place the Piece on the board
 
-        self.tryMove(event.x(), event.y())
+        self.clickLocationSignal.emit(clickLoc)     # emits signal to ScoreBoard
 
     def resetGame(self):
+        # reset scores
+        self.score_white = 0
+        self.score_black = 0
+        # black piece starts
+        self.turn = GameLogic.getTurn(GameLogic, 2)
         '''clears pieces from the board'''
-        # TODO write code to reset game
+        for row in range(0, len(self.boardArray)):
+            for col in range(0, len(self.boardArray[0])):
+                self.boardArray[row][col] = Piece.NoPiece
 
     def tryMove(self, newX, newY):
         '''tries to move a piece'''
@@ -188,10 +196,9 @@ class Board(QFrame):  # base the board on a QFrame widget
                                 self.score_black += 1
                             elif self.turn == 2:
                                 self.score_white += 1
-                # todo DELETE THESE PRINTS AFTER IMPLEMENTING ON THE SCORE BOARD
-                print("White score: ", self.score_white)
-                print("Black score: ", self.score_black)
-
+                # Debuging prints
+                #print("White score: ", self.score_white)
+                #print("Black score: ", self.score_black)
 
     def drawBoardSquares(self, painter):
         '''draw all the squares on the board'''
