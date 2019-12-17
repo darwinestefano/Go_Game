@@ -7,7 +7,7 @@ from game_logic import GameLogic
 
 
 class ScoreBoard(QDockWidget):
-    turn_pass = 1
+    turn = GameLogic.get_turn(GameLogic)    # gets who turn it is from the GameLogic class
 
     '''# base the score_board on a QDockWidget'''
     def __init__(self):
@@ -72,25 +72,48 @@ class ScoreBoard(QDockWidget):
     @pyqtSlot(int)  # checks to make sure that the following slot is receiving an argument of the type 'int'
     def setPlayerTurn(self, turn):
         '''this handles wwho's the next to play'''
-        self.turn_pass = turn
+
+        self.turn = GameLogic.get_turn(GameLogic)
+
         if turn == 1: # if turn equal 1 is time for white to play
             self.label_whiteTurn.show()
             self.label_whiteTurn.setText("WHITE IS YOUR TURN!")
             self.label_blackTurn.hide()
-        else: # else is time for black to play
+        elif turn == 2: # else is time for black to play
             self.label_blackTurn.show()
             self.label_blackTurn.setText("BLACK IS YOUR TURN!")
             self.label_whiteTurn.hide()
+        else:       # it's a zero coming from reset
+            self.label_blackTurn.show()
+            self.label_blackTurn.setText("BLACK STARTS THE GAME!")
+            self.label_whiteTurn.hide()
 
     def change_turn(self):
-        print("change turn : ", self.turn_pass)
-        if self.turn_pass == 1:
-            GameLogic.getTurn(GameLogic, 2)
-            print("work in 1")
-        else:
-            GameLogic.getTurn(GameLogic, 1)
-            print("work in 2")
+        ''' Method called when button PASS is clicked.'''
+        GameLogic.set_counter_pass(GameLogic, 1)                    # increment counter
+        self.count_pass = GameLogic.get_counter_pass(GameLogic)     # get the value on the counter
 
+        ''' button PASS can only be pressed twice consecutively '''
+        if self.count_pass < 2:
+            self.label_clickLocation.setText("You passed your turn!")
+            if self.turn == 1:                      # if it's white turn, it passes its turn to black
+                GameLogic.set_turn(GameLogic, 2)
+                self.setPlayerTurn(2)
+            else:                                   # if it's black turn, it passes its turn to white
+                GameLogic.set_turn(GameLogic, 1)
+                self.setPlayerTurn(1)
+            self.turn = GameLogic.get_turn(GameLogic)   # update the variable self.turn
+        else:
+            Board.game_over(Board)                      # terminates the game
+            self.button_reset.setText("RESTART")        # Set text of reset button to 'restart'
+            self.button_reset.setToolTip('Restart Game')  # Set tooltip of reset button to 'restart'
+            winner = GameLogic.winner                   # gets the winner and print on the Score Board
+            if winner == 1:
+                self.label_clickLocation.setText("Game Over!\nWHITE WINS\nTotal score: " + str(GameLogic.score_white))
+            elif winner == 2:
+                self.label_clickLocation.setText("Game Over!\nBLACK WINS\nTotal score: " + str(GameLogic.score_black))
+            else:
+                self.label_clickLocation.setText("It's a DRAW!")
 
     def add_players(self, layout):
         '''this handles the players status, score and turn'''
@@ -115,7 +138,7 @@ class ScoreBoard(QDockWidget):
         self.v_box1.addWidget(self.label_blackTurn)
         self.group_box_p1.setLayout(self.v_box1)
 
-        # create group box for player black
+        # create group box for player white
         self.group_box_p2 = QGroupBox("\t\t White")
         self.group_box_p2.setObjectName("ColoredGroupBox")
         self.v_box2 = QVBoxLayout()
@@ -136,15 +159,14 @@ class ScoreBoard(QDockWidget):
         self.button_pass = QPushButton('PASS', self)
         self.button_pass.setObjectName("PassObj")
         self.button_pass.setToolTip('Pass your turn')
-        print("self turn :", self.turn_pass)
+        #print("self turn :", self.turn)
         self.button_pass.clicked.connect(self.change_turn)
 
         # create btn for reset
-        self.button_reset = QPushButton('RESET', self)
+        self.button_reset = QPushButton('RESET')
         self.button_reset.setObjectName("PassObj")
         self.button_reset.clicked.connect(self.reset)
-        self.button_reset.setToolTip('Pass your turn')
-
+        self.button_reset.setToolTip('Reset Game')
 
         # create btn for how to play
         self.btn_howto = QPushButton("HOW TO PLAY", self)
@@ -211,6 +233,11 @@ class ScoreBoard(QDockWidget):
     def reset(self):
         Board.resetGame(Board)
         self.label_clickLocation.setText("Game reset, star over!")
+        # reset scores
+        self.setCurrentScoreBlack(0)
+        self.setCurrentScoreWhite(0)
+        # reset turn (black starts)
+        self.setPlayerTurn(0)           # Sends 0 as arg meaning is coming from reset
 
     def btnstate(self):
         '''this method checks state of btn and connect to show how to play'''
@@ -232,11 +259,16 @@ class ScoreBoard(QDockWidget):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText(""
-                       "1. At the beginning of the game, players should consider placing the stones near handicap markers, usually located in the corners of the board. This way, the player is at an advantage of gaining corner positions that help gain territory and are easy to defend."
-                       "\n\n2. Players should only play stones at the edge of the board as they are as easy to capture. Typically, the corner only needs two stones captured while side requires three stones. The open area, however, requires players to seize for stones."
-                       "\n\n3. If looking to occupy an open area, consider building off a stable structure. You get to protect your stones and create a broader base for subsequent moves."
-                       "\n\n4. Avoid placing your stones close to your opponent’s. You don’t want to allow them to gain more considerable influence when you are chasing stones."
-                       "\n\n5. Avoid placing your stones on your opponent’s territory. You are only providing them with free stones for capture. This strategy works when you are confident of capturing his stones.w")
+                       "1. Black plays first, with black and white taking turns.  A stone can be placed at any unoccupied intersection of the board with limited exceptions: "
+                       "\n\t1.1. Suicide Rule: players can't  place  a  stone  which  "
+                       "\n\t      will  immediately  have  no  liberties."
+                       "\n\t1.2. KO Rule: previous game state are not allowed "
+                       "\n\t      or the game may run forever."
+                       "\n\n2. At the beginning of the game, players should consider placing the stones near handicap markers, usually located in the corners of the board. This way, the player is at an advantage of gaining corner positions that help gain territory and are easy to defend."
+                       "\n\n3. Players should only play stones at the edge of the board as they are as easy to capture. Typically, the corner only needs two stones captured while side requires three stones. The open area, however, requires players to seize four stones."
+                       "\n\n4. If looking to occupy an open area, consider building off a stable structure. You get to protect your stones and create a broader base for subsequent moves."
+                       "\n\n5. Avoid placing your stones close to your opponent’s. You don’t want to allow them to gain more considerable influence when you are chasing stones."
+                       "\n\n6. Avoid placing your stones on your opponent’s territory. You are only providing them with free stones for capture. This strategy works when you are confident of capturing his stones.")
         msgBox.setWindowTitle("How to play!")
         msgBox.setStandardButtons(QMessageBox.Close)
 

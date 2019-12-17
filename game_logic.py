@@ -2,21 +2,55 @@ from piece import Piece
 
 class GameLogic:
 
-    turn = 2
+    turn = 2            # black piece starts (1: white, 2: black)
+    score_white = 0     # variables to keep track of scores (White)
+    score_black = 0     # variables to keep track of scores (Black)
+    winner = 0          # variable to get the winner
 
-    def getTurn(self, pieceColour):
+    # counter to keep track how many times button PASS was clicked
+    # Two consecutive passes terminates the game
+    count_pass = 0
+
+    ''' Method that returns who turn it is
+        1- white, 2- Black'''
+    def get_turn(self):
+        return self.turn
+
+    def set_turn(self, pieceColour):
         ''' Turn: Game starts with Black going first
             pieceColour is an integer as follows:
             white = 1
             black = 2'''
         self.turn = pieceColour
-        # Display who turn it is
+        # Display who turn it is on the terminal
         if self.turn == 1:
             print("===== WHITE TURN =====")
         elif self.turn == 2:
             print("===== BLACK TURN =====")
 
-        return self.turn
+    ''' Method that returns the value of the score_white'''
+    def get_score_white(self):
+        return self.score_white
+
+    ''' Method that returns the value of the score_black'''
+    def get_score_black(self):
+        return self.score_black
+
+    ''' Method that sets a new value for the score_white
+        arg 'score' will be either 1 or 0'''
+    def set_score_white(self, score):
+        if score == 1:              # increments by 1
+            self.score_white += 1
+        else:                       # it's a zero (reset)
+            self.score_white = score
+
+    ''' Method that sets a new value for the score_black
+        arg 'score' will be either 1 or 0'''
+    def set_score_black(self, score):
+        if score == 1:              # increments by 1
+            self.score_black += 1
+        else:                       # it's a zero (reset)
+            self.score_black = score
 
     def get_liberties_positions(self, row, col):
         ''' Gets the list of liberties' positions (row, column):
@@ -56,7 +90,6 @@ class GameLogic:
                 if libertiesPieces[0] == libertiesPieces[1] and libertiesPieces[1] == libertiesPieces[2] and libertiesPieces[2] == libertiesPieces[3]:
                     placePiece = False
         return placePiece
-
 
     def get_opponent_group(self, libertiesPos, row, col, boardArray):
         ''' return an array of liberties of the placed piece'''
@@ -142,3 +175,28 @@ class GameLogic:
             return True
         else:
             return False
+
+    def set_counter_pass(self, value):
+        ''' This method changes the value of the counter_pass, which keeps track
+        how many times the button PASS was clicked. Two consecutive passes terminates the game.
+        arg 'value' can either be 1 or 0'''
+        if value == 1:
+            self.count_pass += 1        # increment by 1
+        else:
+            self.count_pass = 0         # reset the counter to zero
+
+    def get_counter_pass(self):
+        ''' This mehtod returns the current value in the count_pass'''
+        return self.count_pass
+
+    def get_winner(self):
+        ''' Method that compares the points of each player to calculate the winner'''
+        if self.score_white > self.score_black:                             # winner is white
+            self.winner = 1
+            print("Winner is WHITE with ", self.score_white, " points.")
+        elif self.score_white < self.score_black:                           # winner is black
+            self.winner = 2
+            print("Winner is BLACK with ", self.score_black, " points.")
+        else:                                                               # it's a draw
+            self.winner = 0
+            print("It's a draw")

@@ -11,18 +11,20 @@ class Board(QFrame):  # base the board on a QFrame widget
     updateScoreSignalBlack = pyqtSignal(int) # signal sent about current score for black
     updateScoreSignalWhite = pyqtSignal(int) # signal sent about current score for white
     updateSetPlayerTurn = pyqtSignal(int) # signal sent to change turn
-    boardWidth = 7     # board is 7 squares wide
+
+    boardWidth = 7      # board is 7 squares wide
     boardHeight = 7     #
-    timerSpeed = 1     # the timer updates ever 1 second
-    counter = 10    # the number the counter will count down from
-    score_white = 0     # Scores variables for each player
-    score_black = 0
-    turn = 2    # black piece starts (1: white, 2: black)
-    boardArray = [] # 2d int/Piece array to Store the satate of the game
+    timerSpeed = 1      # the timer updates ever 1 second
+    counter = 10        # the number the counter will count down from
+    turn = GameLogic.get_turn(GameLogic)    # black piece starts (1: white, 2: black)
+    boardArray = []                         # 2d int/Piece array to Store the satate of the game
+    gameOver = False                        # variable to stop the game
 
     def __init__(self, parent):
         super().__init__(parent)
         self.opponentGroup = []     # array to store locations of the opponent's
+        self.score_white = GameLogic.get_score_white(GameLogic)     # Scores variables for each player
+        self.score_black = GameLogic.get_score_black(GameLogic)
         self.initBoard()
 
     def initBoard(self):
@@ -31,7 +33,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-        # Initially the board will be empty (no pieces)
+        # Populating boardArray: Initially the board will be empty (no pieces)
         for x in range(0, 8):       # initializing the 7 rows (board is 7x7)
             self.boardArray.append([])
             for y in range(0, 8):   # initializing the 7 columns (board is 7x7)
@@ -101,6 +103,12 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.timer.start(self.timerSpeed, self)     # start the timer with the correct speed
         print("start () - timer is started")
 
+    def game_over(self):
+        ''' Method to terminates the Game and generates the winner'''
+        self.gameOver = True                        # set the boolean to TRUE to stop the game
+        GameLogic.get_winner(GameLogic)             # Checks who is the winner
+        #print("Game Over")
+
     def timerEvent(self, event):
         '''this event is automatically called when the timer is updated. based on the timerSpeed variable '''
         # TODO adapter this code to handle your timers
@@ -125,36 +133,28 @@ class Board(QFrame):  # base the board on a QFrame widget
         clickLoc = "  Current location \n " \
                    "          ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
         #print("mousePressEvent() - "+clickLoc)
-        self.clickLocationSignal.emit(clickLoc)                                # todo DELETE THIS LINE????????? INVESTIGATE!
 
-        self.tryMove(event.x(), event.y())
+        if not self.gameOver:
+            self.tryMove(event.x(), event.y())          # sends the location of the click to try to place the Piece on the board
+            self.clickLocationSignal.emit(clickLoc)     # emits signal to ScoreBoard
 
     def resetGame(self):
-        '''clears pieces from the board'''
+        ''' reset variables to restart a new game'''
+        if self.gameOver:
+            self.gameOver = False
         # reset scores
-        self.score_white = 0
-        self.score_black = 0
+        GameLogic.set_score_white(GameLogic, 0)
+        GameLogic.set_score_black(GameLogic, 0)
+        self.score_white = GameLogic.get_score_white(GameLogic)
+        self.score_black = GameLogic.get_score_black(GameLogic)
 
-        #Black pieces starts
-        self.turn = GameLogic.getTurn(GameLogic, 2)
+        # Black pieces starts (reset turn to 2 )
+        GameLogic.set_turn(GameLogic, 2)
 
-        #clear pieces starts
+        # clears pieces from the board
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 self.boardArray[row][col] = Piece.NoPiece
-
-    '''
-    def changeTurn(self, scoreboard):
-        scoreboard.updatePassPlayer.connect(self.setTurn)
-
-    @pyqtSlot(int)
-    def setTurn(self, turn):
-        self.turn = turn
-    '''
-    def getTurn(self, turn):
-        self.turn = turn
-
-
 
     def tryMove(self, newX, newY):
         '''tries to move a piece'''
@@ -175,16 +175,18 @@ class Board(QFrame):  # base the board on a QFrame widget
             '''Check who turn it is and store the white or black piece in the array
             Only if the space is available (Piece.NoPiece)
             Give the turn for the opponent piece.'''
+            self.turn = GameLogic.get_turn(GameLogic)
             if self.turn == 1 and self.boardArray[row][col] == 0:
                 self.boardArray[row][col] = Piece.White
-                self.turn = GameLogic.getTurn(GameLogic, 2)
+                GameLogic.set_turn(GameLogic, 2)
             elif self.turn == 2 and self.boardArray[row][col] == 0:
                 self.boardArray[row][col] = Piece.Black
-                self.turn = GameLogic.getTurn(GameLogic, 1)
+                GameLogic.set_turn(GameLogic, 1)
 
-            self.updateSetPlayerTurn.emit(self.turn)
-            # print the board array to vizualize the placed piece (state of the board)
-            self.printBoardArray()
+            self.turn = GameLogic.get_turn(GameLogic)       # gets updated self.turn
+            self.updateSetPlayerTurn.emit(self.turn)        # emits signal to ScoreBoard to update who turn is on the Score Board
+            GameLogic.set_counter_pass(GameLogic, 0)        # reset counter for how many times the button PASS was clicked
+            self.printBoardArray()                          # print the board array to visualize the placed piece (state of the board)
 
             '''liberties of the placed piece will be checked in each click in order to
             check if it will gain the opponent's territories '''
@@ -210,15 +212,13 @@ class Board(QFrame):  # base the board on a QFrame widget
                         for piece in self.opponentGroup[i][j]:
                             self.boardArray[piece[0]][piece[1]] = Piece.NoPiece
                             if self.turn == 1:
-                                self.score_black += 1
-                                self.updateScoreSignalBlack.emit(self.score_black)
+                                GameLogic.set_score_black(GameLogic, 1)                 # add 1 point for each piece captured
+                                self.score_black = GameLogic.get_score_black(GameLogic) # retrieve updated value of the score_black
+                                self.updateScoreSignalBlack.emit(self.score_black)      # emits signal to scoreBoard to update on the score Board
                             elif self.turn == 2:
-                                self.score_white += 1
-                                self.updateScoreSignalWhite.emit(self.score_white)
-                # todo DELETE THESE PRINTS AFTER IMPLEMENTING ON THE SCORE BOARD
-                print("White score: ", self.score_white)
-                print("Black score: ", self.score_black)
-
+                                GameLogic.set_score_white(GameLogic, 1)                 # add 1 point for each piece captured
+                                self.score_white = GameLogic.get_score_white(GameLogic) # retrieve updated value of the score_white
+                                self.updateScoreSignalWhite.emit(self.score_white)      # emits signal to scoreBoard to update on the score Board
 
     def drawBoardSquares(self, painter):
         '''draw all the squares on the board'''
