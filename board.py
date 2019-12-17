@@ -1,28 +1,27 @@
 from PyQt5.QtWidgets import QFrame
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QPoint
+from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QPoint, pyqtSlot
 from PyQt5.QtGui import *
 from piece import Piece
 from game_logic import GameLogic
 
 class Board(QFrame):  # base the board on a QFrame widget
+
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
-
-    # TODO set the board width and height to be square
-    boardWidth  = 7     # board is 7 squares wide
+    updateScoreSignalBlack = pyqtSignal(int) # signal sent about current score for black
+    updateScoreSignalWhite = pyqtSignal(int) # signal sent about current score for white
+    updateSetPlayerTurn = pyqtSignal(int) # signal sent to change turn
+    boardWidth = 7     # board is 7 squares wide
     boardHeight = 7     #
-    timerSpeed  = 1     # the timer updates ever 1 second
-    counter     = 10    # the number the counter will count down from
-
+    timerSpeed = 1     # the timer updates ever 1 second
+    counter = 10    # the number the counter will count down from
     score_white = 0     # Scores variables for each player
     score_black = 0
-
-    turn = 2            # black piece starts (1: white, 2: black)
-    boardArray = []     # 2d int/Piece array to store the state of the game
+    turn = 2    # black piece starts (1: white, 2: black)
+    boardArray = [] # 2d int/Piece array to Store the satate of the game
 
     def __init__(self, parent):
         super().__init__(parent)
-        print("===== BLACK goes first =====")
         self.opponentGroup = []     # array to store locations of the opponent's
         self.initBoard()
 
@@ -32,11 +31,12 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
 
-        # Populating boardArray: Initially the board will be empty (no pieces)
+        # Initially the board will be empty (no pieces)
         for x in range(0, 8):       # initializing the 7 rows (board is 7x7)
             self.boardArray.append([])
             for y in range(0, 8):   # initializing the 7 columns (board is 7x7)
                 self.boardArray[x].append(Piece.NoPiece)
+
         self.printBoardArray()
 
     def printBoardArray(self):
@@ -108,11 +108,11 @@ class Board(QFrame):  # base the board on a QFrame widget
             if Board.counter == 0:
                 print("Game over")
             self.counter -= 1
-            #print('timerEvent()', self.counter)
-            self.updateTimerSignal.emit(self.counter)
+        # print('timerEvent()', self.counter)
+        # self.updateTimerSignal.emit(self.counter)
         else:
             super(Board, self).timerEvent(event)      # if we do not handle an event we should pass it to the super
-                                                        # class for handelingother wise pass it to the super class for handling
+            # class for handelingother wise pass it to the super class for handling
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
@@ -122,22 +122,39 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def mousePressEvent(self, event):
         '''this event is automatically called when the mouse is pressed'''
-        clickLoc = "click location ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
-        print("mousePressEvent() - "+clickLoc)
-        self.tryMove(event.x(), event.y())          # sends the location of the click to try to place the Piece on the board
+        clickLoc = "  Current location \n " \
+                   "          ["+str(event.x())+","+str(event.y())+"]"     # the location where a mouse click was registered
+        #print("mousePressEvent() - "+clickLoc)
+        self.clickLocationSignal.emit(clickLoc)                                # todo DELETE THIS LINE????????? INVESTIGATE!
 
-        self.clickLocationSignal.emit(clickLoc)     # emits signal to ScoreBoard
+        self.tryMove(event.x(), event.y())
 
     def resetGame(self):
+        '''clears pieces from the board'''
         # reset scores
         self.score_white = 0
         self.score_black = 0
-        # black piece starts
+
+        #Black pieces starts
         self.turn = GameLogic.getTurn(GameLogic, 2)
-        '''clears pieces from the board'''
+
+        #clear pieces starts
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 self.boardArray[row][col] = Piece.NoPiece
+
+    '''
+    def changeTurn(self, scoreboard):
+        scoreboard.updatePassPlayer.connect(self.setTurn)
+
+    @pyqtSlot(int)
+    def setTurn(self, turn):
+        self.turn = turn
+    '''
+    def getTurn(self, turn):
+        self.turn = turn
+
+
 
     def tryMove(self, newX, newY):
         '''tries to move a piece'''
@@ -165,6 +182,7 @@ class Board(QFrame):  # base the board on a QFrame widget
                 self.boardArray[row][col] = Piece.Black
                 self.turn = GameLogic.getTurn(GameLogic, 1)
 
+            self.updateSetPlayerTurn.emit(self.turn)
             # print the board array to vizualize the placed piece (state of the board)
             self.printBoardArray()
 
@@ -193,11 +211,14 @@ class Board(QFrame):  # base the board on a QFrame widget
                             self.boardArray[piece[0]][piece[1]] = Piece.NoPiece
                             if self.turn == 1:
                                 self.score_black += 1
+                                self.updateScoreSignalBlack.emit(self.score_black)
                             elif self.turn == 2:
                                 self.score_white += 1
-                # Debuging prints
-                #print("White score: ", self.score_white)
-                #print("Black score: ", self.score_black)
+                                self.updateScoreSignalWhite.emit(self.score_white)
+                # todo DELETE THESE PRINTS AFTER IMPLEMENTING ON THE SCORE BOARD
+                print("White score: ", self.score_white)
+                print("Black score: ", self.score_black)
+
 
     def drawBoardSquares(self, painter):
         '''draw all the squares on the board'''
@@ -239,6 +260,5 @@ class Board(QFrame):  # base the board on a QFrame widget
                 radius = (self.squareWidth() - 15) / 2                # calculate the radius of the circle
                 center = QPoint(80 + radius, 80 + radius)             # calculate the centre of the circle
                 painter.drawEllipse(center, radius, radius)
-
                 painter.restore()
                 self.update()
